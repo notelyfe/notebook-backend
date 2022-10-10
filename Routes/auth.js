@@ -4,10 +4,11 @@ const User = require('../Models/User')
 const bcrypt = require('bcryptjs')
 const { body, validationResult } = require('express-validator');
 var jwt = require('jsonwebtoken');
+var fetchuser = require('../Middleware/fetchuser')
 
 const JWT_SECRET = 'noteissmart'
 
-//Create a user using: post "/api/auth/createuser".  NO login require
+//Route 1: Create a user using: post "/api/auth/createuser".  NO login require
 router.post('/createuser', [
     body('name', 'Enter Valid Name').isLength({ min: 3 }),
     body('email', 'Enter Valid Email').isEmail({ min: 5 }),
@@ -52,7 +53,7 @@ router.post('/createuser', [
     }
 })
 
-//authenticate a user using post "/api/auth/login" no login require
+//Route 2: authenticate a user using post "/api/auth/login" no login require
 
 router.post('/login', [
     body('email', 'Enter Valid Email').isEmail({ min: 5 }),
@@ -66,11 +67,11 @@ router.post('/login', [
 
     const { email, password } = req.body
     try {
-        let user =await User.findOne({ email });
+        let user = await User.findOne({ email });
         if (!user) {
             return res.status(400).json({ error: 'Invalid Credentials' })
         }
-        const passwordCompare =await bcrypt.compare(password, user.password);
+        const passwordCompare = await bcrypt.compare(password, user.password);
         if (!passwordCompare) {
             return res.status(400).json({ error: 'Invalid Credentials' })
         }
@@ -85,6 +86,18 @@ router.post('/login', [
     catch (error) {
         console.error(error.message);
         res.status(500).send('internal server error');
+    }
+})
+
+//Route 3: get loggedin user details using Post "/api/auth/getuser" login require
+router.post('/getuser', fetchuser,  async (req, res) => {
+    try {
+        userId = req.user.id;
+        const user = await User.findById(userId).select("-password")
+        res.send(user)
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error")
     }
 })
 
