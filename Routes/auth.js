@@ -16,14 +16,12 @@ router.post('/createuser', [
 ], async (req, res) => {
 
     //if error, return Bad request and the errors
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
 
     //check whether user with the email exist already
-
     try {
         let user = await User.findOne({ email: req.body.email });
         if (user) {
